@@ -2,10 +2,9 @@
 
 let User = require('../models/user');
 let jwt = require('jsonwebtoken');
-const SECRET_KEY = process.env.SECRET_KEY;
+let expressValidator = require('express-validator');
 
-var token = jwt.sign(user, secret.secretToken, { expiresInMinutes: 60 });
-return res.json({token:token});
+const SECRET_KEY = process.env.SECRET_KEY;
 
 
 /**
@@ -21,9 +20,14 @@ let getUsers = (req, res, next) => {
         error: err
       });
     }
+    // returned json users will not have passwords 
+    let parsedUsers = users.map((user) => {
+      user.password = undefined;
+      return user;
+    })
     res.status(200).json({
       success: true,
-      users: users
+      users: parsedUsers
     });
   });
 };
@@ -34,16 +38,6 @@ let getUsers = (req, res, next) => {
 */
 
 let createUser = (req, res, next) => {
-  // let name = req.body.name;
-  // let firstName = req.body.firstName;
-  // let lastName = req.body.lastName;
-  // let middleName = req.body.middleName;
-  // let username = req.body.username;
-  // let email = req.body.email;
-  // let password = req.body.password;
-  // let passwordConfirmation = req.body.passwordConfirmation;
-
-  // req.checkBody('name', 'Name field is required').notEmpty();
   req.checkBody('firstName', 'First name field is required').notEmpty();
   req.checkBody('lastName', 'Last name field is required').notEmpty();
   req.checkBody('email', 'Email field is required').notEmpty();
@@ -61,16 +55,20 @@ let createUser = (req, res, next) => {
     });
   } else {
 
-    let newUser = new User();
+    let userObject = {};
+    userObject.name = {};
+    // let userObject = new User();
 
-    newUser.name.firstName = req.body.firstName;
-    newUser.name.lastName = req.body.lastName;
-    newUser.username = req.body.username;
-    newUser.email = req.body.email;
-    newUser.password = req.body.password;
-    if (req.body.middleName) newUser.name.middleName = req.body.middleName;
+    userObject.name.firstName = req.body.firstName;
+    userObject.name.lastName = req.body.lastName;
+    userObject.username = req.body.username;
+    userObject.email = req.body.email;
+    userObject.password = req.body.password;
+    if (req.body.middleName) userObject.name.middleName = req.body.middleName;
 
-    User.create(newUser, (err, user) => {
+    let newUser = new User(userObject);
+
+    newUser.save((err, user) => {
       if (err) {
         console.log('Error: ' + err);
         res.status(401).json({
@@ -143,7 +141,7 @@ let updateUser = (req, res, next) => {
       }
       if (req.body.password && req.body.passwordConfirmation) {
         req.checkBody('passwordConfirmation', 'Passwords do not match').equals(req.body.password);
-        newObject.password = req.body.password;
+        userObject.password = req.body.password;
       }
 
       let errors = req.validationErrors();
@@ -169,6 +167,7 @@ let updateUser = (req, res, next) => {
                 error: err
               });
             } else {
+              updatedUser.password = undefined;
               return res.status(200).json({
                 success: true,
                 message: 'User was successfully updated',
@@ -264,9 +263,14 @@ let login = (req, res, next) => {
           }
           if (isMatch) {
             console.log('Success: You are successfully logged in');
+
+            let token = jwt.sign(user, SECRET_KEY, { expiresInMinutes: 120 });
+            user.password = undefined;
             res.status(200).json({
               success: true,
-              message: 'You are successfully logged in'
+              message: 'You are successfully logged in',
+              user: user,
+              token: token
             });
           } else {
             console.log('Error: Password is invalid');

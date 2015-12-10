@@ -55,11 +55,37 @@ app.use((err, req, res, next) => {
   }
 });
 
-// development environment setup
+
+/**
+ * development environment setup
+ */
+
+
 if (process.env.NODE_ENV == 'development') {
   app.use(logger('dev'));
   app.use(errorhandler())
 }
+
+/**
+ * express-validator configuration
+ */
+
+app.use(expressValidator({
+  errorFormatter: function(param, msg, value) {
+     var namespace = param.split('.')
+     , root    = namespace.shift()
+     , formParam = root;
+
+   while(namespace.length) {
+     formParam += '[' + namespace.shift() + ']';
+   }
+   return {
+     param : formParam,
+     msg   : msg,
+     value : value
+   };
+  }
+}));
 
 
 /**

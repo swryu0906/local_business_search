@@ -3,7 +3,7 @@
 let mongoose = require('mongoose');
 let bcrypt = require('bcrypt');
 
-const  SALT_WORK_FACTOR = process.env.SALT_WORK_FACTOR;
+const  SALT_WORK_FACTOR = Number(process.env.SALT_WORK_FACTOR) || 10;
 
 
 /**
@@ -59,7 +59,9 @@ userSchema.pre('save', function(next) { // function expression is needed
  * comparePassword method for comparing a plain text password with hashed one
  */
 
-userSchema.methods.comparePassword = (candidatePassword, callback) => {
+userSchema.methods.comparePassword = function(candidatePassword, callback) {
+  // function expression is needed.
+
   // bcrypt.compare is a method which will return a boolean value
   // after comparing a plain text password with the hashed password
   let currentUser = this;
