@@ -10,11 +10,24 @@ let cors = require('cors');
 let dotenv = require('dotenv');
 let errorhandler = require('errorhandler');
 let express = require('express');
+let expressValidator = require('express-validator');
 let mongoose = require('mongoose');
 let logger = require('morgan');
 
 let app = express();
 dotenv.load();
+
+
+/**
+ * db configuration
+ */
+
+mongoose.connect(process.env.MONGOLAB_URI || 'mongodb://localhost/localBusinessSearchDB')
+let db = mongoose.connection;
+db.on('error', console.error.bind(console, 'connection error:'));
+db.once('open', (callback) => {
+  console.log('mongoose connected');
+});
 
 
 /**
