@@ -35,7 +35,7 @@ db.once('open', (callback) => {
  */
 
 let userRoutes = require('./routes/userRoutes');
-// let yelpRoutes = require('./routes/yelpRoutes');
+let yelpRoutes = require('./routes/yelpRoutes');
 
 
 /**
@@ -93,7 +93,7 @@ app.use(expressValidator({
  */
 
 app.use('/user', userRoutes);
-// app.use('/yelp', yelpRoutes);
+app.use('/yelp', yelpRoutes);
 
 
 /**
